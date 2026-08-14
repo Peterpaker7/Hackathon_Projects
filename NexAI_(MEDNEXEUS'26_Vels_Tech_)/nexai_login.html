@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexAI · Secure Access</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c:#00e5cc;--cd:rgba(0,229,204,0.12);--cr:rgba(0,229,204,0.35);
+  --red:#ff4757;--ora:#ff9f43;
+  --bg:#060d14;--bg2:#0b1520;--bg3:#0f1c2b;
+  --tx:#c8e6f0;--mu:#2e5568;
+  --fh:'Orbitron',monospace;--fb:'Sora',sans-serif;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--fb);color:var(--tx)}
+
+/* ── canvas ── */
+#cv{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── scanline ── */
+.sl{position:fixed;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c),transparent);opacity:.25;z-index:1;pointer-events:none;animation:scan 8s linear infinite}
+@keyframes scan{0%{top:-1px}100%{top:100%}}
+
+/* ── corner deco ── */
+.corner{position:fixed;width:60px;height:60px;z-index:2;pointer-events:none}
+.corner svg{width:100%;height:100%}
+.c-tl{top:0;left:0}
+.c-tr{top:0;right:0;transform:scaleX(-1)}
+.c-bl{bottom:0;left:0;transform:scaleY(-1)}
+.c-br{bottom:0;right:0;transform:scale(-1)}
+
+/* ── page shell ── */
+#page{
+  position:fixed;inset:0;z-index:10;
+  display:flex;align-items:center;justify-content:center;
+  animation:rise .8s cubic-bezier(.16,1,.3,1) both
+}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── card ── */
+.card{
+  width:min(420px,92vw);
+  background:rgba(10,19,30,.88);
+  border:1px solid rgba(0,229,204,.16);
+  border-radius:24px;
+  padding:44px 40px 36px;
+  backdrop-filter:blur(28px);
+  position:relative;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,229,204,.04),0 40px 100px rgba(0,0,0,.7),0 0 80px rgba(0,229,204,.05);
+}
+
+/* top glow line */
+.card::before{
+  content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--c),transparent);
+  opacity:.6
+}
+/* inner ambient */
+.card::after{
+  content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,229,204,.07) 0%,transparent 70%);
+  pointer-events:none
+}
+
+/* ── logo block ── */
+.logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px}
+.logo-mark{
+  width:40px;height:40px;border-radius:12px;
+  background:linear-gradient(135deg,#009980,#00e5cc);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(0,229,204,.3);
+  flex-shrink:0
+}
+.logo-mark svg{width:22px;height:22px}
+.logo-text{font-family:var(--fh);font-size:28px;font-weight:900;color:#fff;letter-spacing:3px}
+.logo-text em{color:var(--c);font-style:normal}
+.logo-sub{text-align:center;font-size:9px;letter-spacing:3px;color:var(--mu);text-transform:uppercase;margin-bottom:36px}
+
+/* ── role tabs ── */
+.tabs{display:flex;background:rgba(0,0,0,.35);border:1px solid rgba(0,229,204,.08);border-radius:12px;padding:4px;gap:4px;margin-bottom:28px}
+.tab{
+  flex:1;padding:10px 8px;border-radius:9px;border:none;
+  background:transparent;color:var(--mu);
+  font-family:var(--fb);font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:7px
+}
+.tab-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.4;flex-shrink:0}
+.tab:hover{color:var(--tx)}
+.tab.on{
+  background:rgba(0,229,204,.08);color:var(--c);
+  box-shadow:0 0 12px rgba(0,229,204,.08),inset 0 0 16px rgba(0,229,204,.04);
+  border:1px solid rgba(0,229,204,.22)
+}
+.tab.on .tab-dot{opacity:1;box-shadow:0 0 6px var(--c);animation:blink 2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* patient tab active */
+.tab.pat.on{
+  background:rgba(255,159,67,.07);color:var(--ora);
+  border-color:rgba(255,159,67,.22);
+  box-shadow:0 0 12px rgba(255,159,67,.07)
+}
+.tab.pat.on .tab-dot{background:var(--ora);box-shadow:0 0 6px var(--ora)}
+
+/* ── fields ── */
+.field{margin-bottom:16px}
+.field label{
+  display:block;font-size:9px;letter-spacing:2.5px;color:var(--mu);
+  text-transform:uppercase;margin-bottom:8px;padding-left:2px
+}
+.inp-wrap{position:relative}
+.inp-ico{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:14px;opacity:.3;pointer-events:none;line-height:1
+}
+.field input{
+  width:100%;
+  background:rgba(0,0,0,.4);
+  border:1px solid rgba(0,229,204,.1);
+  border-radius:11px;
+  padding:13px 14px 13px 42px;
+  color:var(--tx);font-family:var(--fb);font-size:14px;letter-spacing:.3px;
+  outline:none;transition:all .2s
+}
+.field input::placeholder{color:#1a3344}
+.field input:focus{
+  border-color:rgba(0,229,204,.45);
+  background:rgba(0,229,204,.03);
+  box-shadow:0 0 0 3px rgba(0,229,204,.07),0 0 20px rgba(0,229,204,.06)
+}
+
+/* ── error ── */
+.err{
+  overflow:hidden;max-height:0;transition:max-height .3s ease,margin .3s ease;
+  background:rgba(255,71,87,.07);border:1px solid transparent;border-radius:10px;
+  color:#ff6672;font-size:11px;letter-spacing:.3px;display:flex;align-items:center;gap:8px
+}
+.err.show{max-height:60px;padding:10px 14px;border-color:rgba(255,71,87,.22);margin-bottom:16px}
+
+/* ── submit ── */
+.btn{
+  width:100%;padding:14px;margin-top:4px;
+  background:linear-gradient(135deg,#008f78 0%,#00e5cc 60%,#00c0a8 100%);
+  background-size:200% 100%;
+  border:none;border-radius:11px;
+  color:#05100a;font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:3px;
+  cursor:pointer;transition:all .3s;position:relative;overflow:hidden
+}
+.btn::after{
+  content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+  transition:left .5s
+}
+.btn:hover::after{left:160%}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,229,204,.3);background-position:100% 0}
+.btn:active{transform:translateY(0)}
+.btn.busy{opacity:.6;cursor:not-allowed;pointer-events:none}
+
+/* ── divider ── */
+.divider{
+  display:flex;align-items:center;gap:12px;margin:20px 0 0;
+  font-size:9px;letter-spacing:2px;color:#142030;text-transform:uppercase
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(0,229,204,.07)}
+
+/* ── status strip ── */
+.status-strip{
+  display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;
+  font-size:9px;letter-spacing:2px;color:#1a3344;text-transform:uppercase
+}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);animation:blink 2s ease infinite}
+
+/* ── loader overlay ── */
+.ldr{
+  display:none;position:fixed;inset:0;z-index:99;
+  background:rgba(6,13,20,.75);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;flex-direction:column;gap:14px
+}
+.ldr.show{display:flex}
+.spin{
+  width:36px;height:36px;border-radius:50%;
+  border:1.5px solid rgba(0,229,204,.12);border-top-color:var(--c);
+  animation:sp .75s linear infinite
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ldr-txt{font-size:9px;letter-spacing:3px;color:var(--mu);text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+<div class="sl"></div>
+
+<!-- corner SVG deco -->
+<div class="corner c-tl"><svg viewBox="0 0 60 60" fill="none"><path d="M2 58 L2 2 L58 2" stroke="rgba(0,229,204,.25)" stroke-width="1.5" stroke-linecap="round"/><circle cx="2" cy="2" r="2" fill="rgba(0,229,204,.5)"/></svg></div>
+<div class="corner c-tr"><svg viewBox="0 0 60 60" fill="none"><path d="M2 58 L2 2 L58 2" stroke="rgba(0,229,204,.25)" stroke-width="1.5" stroke-linecap="round"/><circle cx="2" cy="2" r="2" fill="rgba(0,229,204,.5)"/></svg></div>
+<div class="corner c-bl"><svg viewBox="0 0 60 60" fill="none"><path d="M2 58 L2 2 L58 2" stroke="rgba(0,229,204,.25)" stroke-width="1.5" stroke-linecap="round"/><circle cx="2" cy="2" r="2" fill="rgba(0,229,204,.5)"/></svg></div>
+<div class="corner c-br"><svg viewBox="0 0 60 60" fill="none"><path d="M2 58 L2 2 L58 2" stroke="rgba(0,229,204,.25)" stroke-width="1.5" stroke-linecap="round"/><circle cx="2" cy="2" r="2" fill="rgba(0,229,204,.5)"/></svg></div>
+
+<!-- loader -->
+<div class="ldr" id="ldr">
+  <div class="spin"></div>
+  <div class="ldr-txt">Authenticating</div>
+</div>
+
+<!-- LOGIN CARD -->
+<div id="page">
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="logo-row">
+      <div class="logo-mark">
+        <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 18 L11 4 L18 18" stroke="#05100a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7 13 L15 13" stroke="#05100a" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="logo-text">Nex<em>AI</em></div>
+    </div>
+    <div class="logo-sub">AI-Powered Pregnancy Monitoring Platform</div>
+
+    <!-- Role tabs -->
+    <div class="tabs">
+      <button class="tab pat on" id="tPat" onclick="setRole('patient')">
+        <span class="tab-dot"></span>Patient
+      </button>
+      <button class="tab" id="tClin" onclick="setRole('clinician')">
+        <span class="tab-dot"></span>Clinician
+      </button>
+    </div>
+
+    <!-- Error -->
+    <div class="err" id="err">⚠&nbsp; Invalid credentials — access denied.</div>
+
+    <!-- User ID -->
+    <div class="field">
+      <label>User ID</label>
+      <div class="inp-wrap">
+        <span class="inp-ico">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </span>
+        <input type="text" id="uid" placeholder="Enter your user ID" autocomplete="off" />
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="field">
+      <label>Password</label>
+      <div class="inp-wrap">
+        <span class="inp-ico">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <input type="password" id="pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()" />
+      </div>
+    </div>
+
+    <button class="btn" id="btn" onclick="login()">AUTHENTICATE</button>
+
+    <div class="divider">Secure Access</div>
+
+    <div class="status-strip">
+      <div class="sdot"></div>
+      <span>System Online &nbsp;·&nbsp; AES-256 Encrypted &nbsp;·&nbsp; <span id="clk"></span></span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── credentials ── */
+const DB = {
+  patient:[
+    {id:'patient',pass:'123',name:'Kavitha',init:'KV'},
+    {id:'priya',  pass:'patient123',  name:'Priya',init:'PR'},
+    {id:'lakshmi',pass:'patient123',  name:'Lakshmi',init:'LA'}
+  ],
+  clinician:[
+    {id:'clinician',pass:'mukesh',name:'Dr. Meera',init:'DM'},
+    {id:'doctor1',  pass:'pass123',  name:'Dr. Ramesh',init:'DR'}
+  ]
+};
+let role='patient';
+
+function setRole(r){
+  role=r;
+  document.getElementById('tPat').className='tab pat'+(r==='patient'?' on':'');
+  document.getElementById('tClin').className='tab'+(r==='clinician'?' on':'');
+  document.getElementById('err').classList.remove('show');
+}
+
+function login(){
+  const uid=document.getElementById('uid').value.trim();
+  const pwd=document.getElementById('pwd').value;
+  const err=document.getElementById('err');
+  const btn=document.getElementById('btn');
+  err.classList.remove('show');
+  if(!uid||!pwd){err.textContent='⚠  Please enter both User ID and Password.';err.classList.add('show');return}
+  btn.classList.add('busy');btn.textContent='VERIFYING…';
+  document.getElementById('ldr').classList.add('show');
+  setTimeout(()=>{
+    document.getElementById('ldr').classList.remove('show');
+    btn.classList.remove('busy');btn.textContent='AUTHENTICATE';
+    const u=DB[role].find(x=>x.id===uid&&x.pass===pwd);
+    if(!u){err.textContent='⚠  Invalid credentials — access denied.';err.classList.add('show');return}
+    /* ─── redirect based on role ─── */
+    if(role==='patient'){
+      sessionStorage.setItem('nexai_user',JSON.stringify({...u,role}));
+      window.location.href='http://localhost:3000/';
+    } else {
+      sessionStorage.setItem('nexai_user',JSON.stringify({...u,role}));
+      window.location.href='http://localhost:3001/';
+    }
+  },950);
+}
+
+/* clock */
+function tick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+setInterval(tick,1000);tick();
+
+/* ── particle canvas ── */
+(()=>{
+  const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+  let W,H,pts;const N=60,D=110;
+  const resize=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight};
+  const init=()=>{resize();pts=Array.from({length:N},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.2+.4}))};
+  const draw=()=>{
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<D){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(0,229,204,${(1-d/D)*.14})`;ctx.lineWidth=.5;ctx.stroke()}
+    }
+    pts.forEach(p=>{
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(0,229,204,.3)';ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  };
+  window.addEventListener('resize',resize);
+  init();draw();
+})();
+</script>
+</body>
+</html>
