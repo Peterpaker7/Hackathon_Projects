@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustSphere — Review Authenticity Scanner</title>
+  <meta name="description" content="Paste any product review to detect fake or deceptive reviews with TrustSphere's AI-powered analysis." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body class="state-intro">
+  <!-- Background Grid -->
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- Globe Canvas (Always in background) -->
+  <canvas id="globe-canvas"></canvas>
+
+  <!-- Wordmark / Navbar -->
+  <header class="header" id="header">
+    <a href="#" class="wordmark" title="Back to overview" id="nav-home">
+      <span class="wordmark-dot"></span>
+      <span class="wordmark-text">Trust<em>Sphere</em></span>
+    </a>
+
+    <div class="navbar-actions">
+      <button class="navbar__cta" id="nav-launch">[ LAUNCH SCANNER ]</button>
+    </div>
+  </header>
+
+  <!-- ==================== INTRO VIEW ==================== -->
+  <div id="intro-view" class="view-container view-active">
+    <!-- SECTION 1 — HERO -->
+    <section class="hero" id="hero">
+      <div class="hero__inner">
+        <!-- Staggered Headline -->
+        <h1 class="hero__headline">
+          <div class="headline-row row-1">
+            <span class="hero-anim hero-anim--1">We Reveal</span>
+            <span class="hero-anim hero-anim--2">The Truth</span>
+          </div>
+          <div class="headline-row row-2">
+            <span class="hero-anim hero-anim--3">Hiding In</span>
+            <span class="hero-anim hero-anim--4">Plain Sight</span>
+          </div>
+        </h1>
+
+        <!-- Bottom Content Overlay -->
+        <div class="hero__bottom">
+          <div class="hero__content-left">
+            <p class="hero__sub hero-anim hero-anim--5">
+              TrustSphere analyzes the language of a review to reveal whether it reads
+              as genuine or deceptive &mdash; turning wording into evidence you can trust.
+            </p>
+            <div class="hero__actions hero-anim hero-anim--6">
+              <button class="btn btn--link" id="hero-launch">[ START SCANNING &rarr; ]</button>
+              <button class="btn btn--link">[ LEARN MORE &rarr; ]</button>
+            </div>
+
+            <div class="hero__scroll hero-anim hero-anim--7">
+              [ SCROLL &darr; ]
+            </div>
+          </div>
+
+          <div class="hero__content-right hero-anim hero-anim--6">
+            <div class="featured-box">
+              <div class="featured-header">FEATURED</div>
+              <div class="featured-item active">
+                <div class="featured-text">
+                  <div class="featured-title">The Hidden Economy of Fake Reviews</div>
+                  <div class="featured-link">[ READ ARTICLE &rarr; ]</div>
+                </div>
+                <div class="featured-img"></div>
+              </div>
+              <div class="featured-item">
+                <div class="featured-title">TrustSphere Intelligence Adoption Soars</div>
+              </div>
+              <div class="featured-item">
+                <div class="featured-title">AI Analysis: Comparing Detection Approaches</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2 — HOW IT WORKS -->
+    <section class="section how-it-works" id="how-it-works">
+      <div class="section__inner">
+        <h2 class="section__headline reveal">From review to verdict in&nbsp;seconds.</h2>
+        <div class="steps-row">
+          <div class="glass-card step-card reveal reveal--stagger-1">
+            <h3 class="step-card__title">Paste a Review</h3>
+            <p class="step-card__desc">Drop any product review text into the scanner.</p>
+          </div>
+          <div class="glass-card step-card reveal reveal--stagger-2">
+            <h3 class="step-card__title">Deep Analysis</h3>
+            <p class="step-card__desc">Our model weighs the review's wording, specificity, and language patterns.</p>
+          </div>
+          <div class="glass-card step-card reveal reveal--stagger-3">
+            <h3 class="step-card__title">Get the Verdict</h3>
+            <p class="step-card__desc">A clear trust score with a plain-language reason for the result.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>&copy; 2026 TrustSphere. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- ==================== SCANNER VIEW ==================== -->
+  <div id="scanner-view" class="view-container view-hidden">
+    <!-- Searching Overlay -->
+    <div class="searching-overlay" id="searching-overlay">
+      <div class="searching-text" id="searching-text">
+        Analyzing<span class="dot dot-1">.</span><span class="dot dot-2">.</span><span class="dot dot-3">.</span><span class="dot dot-4">.</span><span class="dot dot-5">.</span>
+      </div>
+      <div class="scan-line" id="scan-line"></div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="results-panel" id="results-panel">
+      <div class="results-inner">
+        <!-- Verdict Header -->
+        <div class="verdict-header">
+          <div class="trust-score" id="trust-score">
+            <svg class="score-ring" viewBox="0 0 120 120" width="100" height="100">
+              <circle class="score-ring-bg" cx="60" cy="60" r="52" />
+              <circle class="score-ring-fill" id="score-ring-fill" cx="60" cy="60" r="52"
+                stroke-dasharray="326.73" stroke-dashoffset="326.73" />
+            </svg>
+            <div class="score-value">
+              <span class="score-number" id="score-number">0</span>
+              <span class="score-max">%</span>
+            </div>
+          </div>
+          <div class="verdict-info">
+            <h1 class="verdict-label" id="verdict-label">&mdash;</h1>
+            <p class="verdict-summary" id="verdict-summary"></p>
+          </div>
+          <div class="verdict-badge" id="verdict-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>&mdash;</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Analyzed Review + Reason -->
+        <div class="evidence-section">
+          <h2 class="section-title">Analyzed Review</h2>
+          <div class="evidence-list" id="evidence-list"></div>
+        </div>
+
+        <!-- Scan Again -->
+        <button class="scan-again-btn btn--link" id="scan-again-btn">
+          [ SCAN ANOTHER REVIEW ]
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container" id="search-container">
+      <form class="search-bar" id="search-form">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          id="search-input"
+          placeholder="paste a review to analyze&hellip;"
+          autocomplete="off"
+          spellcheck="false"
+          required
+        />
+        <button type="submit" class="search-submit" id="search-submit">
+          [ SCAN ]
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
